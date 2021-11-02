@@ -7,43 +7,46 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-static void find(char *path)
+int is_directory(const char *path)
 {
-    DIR *dir = NULL;
-    struct dirent *file = NULL;
-    dir = opendir(path);
-    if (dir == NULL)
-    {
-        err(1, "Find: Cannot open folder");
-    }
+   struct stat statbuf;
+   if (stat(path, &statbuf) != 0)
+       return 0;
+   return S_ISDIR(statbuf.st_mode);
+}
 
-    while ((file = readdir(dir)) != NULL)
-    {
-        if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0)
-        {
-            printf("oui\n");
-        }
-    }
-    closedir(dir);
-    return;
+void print_file(char *path)
+{
+    printf("%s\n", path);
 }
 
 static void my_find(char *path)
 {
-    DIR *dir = NULL;
-    struct dirent *file = NULL;
-    dir = opendir(path);
+    DIR *dir = opendir(path);;
     if (dir == NULL)
     {
         err(1, "Find: Cannot open folder");
     }
+    struct dirent *file_dirent = NULL;
+    struct stat dir_stat;
 
-    while ((file = readdir(dir)) != NULL)
+    while ((file_dirent = readdir(dir)) != NULL)
     {
-        if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0)
+        char buff[strlen(path) + strlen(file_dirent->d_name) + 2];
+        sprintf(buff, "%s/%s", path, file_dirent->d_name);
+        if (strcmp(file_dirent->d_name, ".") != 0 && strcmp(file_dirent->d_name, "..") != 0)
         {
-            printf("%s\n", file->d_name);
+            if (is_directory(buff))
+            {
+                printf("%s\n", buff);
+                my_find(buff);
+            }
+            else
+            {
+                print_file(buff);
+            }
         }
     }
     closedir(dir);
@@ -52,6 +55,7 @@ static void my_find(char *path)
 
 int main(int argc, char *argv[])
 {
-    my_find(argv[1]);
+    char *path = argv[1];
+    my_find(path);
     return 0;
 }
