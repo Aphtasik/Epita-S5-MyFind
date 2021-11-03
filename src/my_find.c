@@ -1,5 +1,23 @@
 #include "my_find.h"
 
+/** struct function */
+/** { */
+/**     char *name; */
+/**     int (*fun)(...); */
+/** }; */
+/**  */
+/** struct function funs[2] = */
+/** { */
+/**     { */
+/**         .name = "-print", */
+/**         .fun = my_find */
+/**     }, */
+/**     { */
+/**         .name = "-name", */
+/**         .fun = my_find_name */
+/**     } */
+/** }; */
+
 int is_directory(const char *path)
 {
     struct stat statbuf;
@@ -44,9 +62,71 @@ void my_find(char *path)
     return;
 }
 
+void my_find_name(char *path, char *match)
+{
+    DIR *dir = opendir(path);
+    if (dir == NULL)
+    {
+        err(1, "Find: Cannot open folder");
+    }
+    struct dirent *file_dirent = NULL;
+
+    while ((file_dirent = readdir(dir)) != NULL)
+    {
+        char buff[strlen(path) + strlen(file_dirent->d_name) + 2];
+        sprintf(buff, "%s/%s", path, file_dirent->d_name);
+        if (strcmp(file_dirent->d_name, ".") != 0
+            && strcmp(file_dirent->d_name, "..") != 0)
+        {
+            if (is_directory(buff))
+            {
+                my_find_name(buff, match);
+            }
+            else if (fnmatch(match, file_dirent->d_name, 0) == 0)
+            {
+                print_file(buff);
+            }
+        }
+    }
+    closedir(dir);
+    return;
+}
+
+void rm_last_backslash(char *path)
+{
+    unsigned long i = strlen(path);
+
+    if (path[i - 1] == '/')
+    {
+        path[i - 1] = '\0';
+    }
+}
+
+void find_head(char *path)
+{
+    rm_last_backslash(path);
+    printf("%s/\n", path);
+    my_find(path);
+}
+
 int main(int argc, char *argv[])
 {
-    char *path = argv[1];
-    my_find(path);
+    if (argc == 1)
+    {
+        my_find(".");
+    }
+    else
+    {
+        char **starting_points = calloc(argc - 1, sizeof(char *));
+        for (int i = 1; i < argc && argv[i][0] != '-'; i++)
+        {
+            starting_points[i - 1] = argv[i];
+        }
+
+        for (int i = 0; starting_points[i] != 0; i++)
+        {
+            find_head(starting_points[i]);
+        }
+    }
     return 0;
 }
