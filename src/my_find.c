@@ -1,23 +1,5 @@
 #include "my_find.h"
 
-/** struct function */
-/** { */
-/**     char *name; */
-/**     int (*fun)(...); */
-/** }; */
-/**  */
-/** struct function funs[2] = */
-/** { */
-/**     { */
-/**         .name = "-print", */
-/**         .fun = my_find */
-/**     }, */
-/**     { */
-/**         .name = "-name", */
-/**         .fun = my_find_name */
-/**     } */
-/** }; */
-
 int is_directory(const char *path)
 {
     struct stat statbuf;
@@ -117,7 +99,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        char **starting_points = calloc(argc - 1, sizeof(char *));
+        char **starting_points = calloc(argc - 1, sizeof(char *) * argc);
         for (int i = 1; i < argc && argv[i][0] != '-'; i++)
         {
             starting_points[i - 1] = argv[i];
@@ -127,6 +109,7 @@ int main(int argc, char *argv[])
         {
             find_head(starting_points[i]);
         }
+        free(starting_points);
     }
     return 0;
 }
