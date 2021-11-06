@@ -3,10 +3,8 @@
 
 enum my_expr_type
 {
-    EXPR_ADDITION = 0,
-    EXPR_SUBTRACTION,
-    EXPR_MULTIPLICATION,
-    EXPR_DIVISION,
+    EXPR_AND = 0,
+    EXPR_OR,
     EXPR_NEGATION,
     EXPR_NUMBER
 };

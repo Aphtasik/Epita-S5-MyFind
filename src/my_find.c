@@ -84,6 +84,13 @@ void rm_last_backslash(char *path)
     }
 }
 
+void find_head_name(char *path, char *match)
+{
+    rm_last_backslash(path);
+    printf("%s/\n", path);
+    my_find_name(path, match);
+}
+
 void find_head(char *path)
 {
     rm_last_backslash(path);
@@ -100,14 +107,49 @@ int main(int argc, char *argv[])
     else
     {
         char **starting_points = calloc(argc - 1, sizeof(char *) * argc);
-        for (int i = 1; i < argc && argv[i][0] != '-'; i++)
+        int i;
+        // Gather all starting points
+        for (i = 1; i < argc && argv[i][0] != '-'; i++)
         {
             starting_points[i - 1] = argv[i];
         }
 
-        for (int i = 0; starting_points[i] != 0; i++)
+        // If there is only starting points
+        if (i == argc)
         {
-            find_head(starting_points[i]);
+            for (int j = 0; starting_points[j] != 0; j++)
+            {
+                find_head(starting_points[j]);
+            }
+        }
+        else
+        {
+            for (int j = i; j < argc; j++)
+            {
+                char *arg = argv[j];
+
+                if (strcmp(arg, "-name") == 0)
+                {
+                    if (j + 1 <= argc)
+                    {
+                        for (int k = 0; starting_points[k] != 0; k++)
+                        {
+                            find_head_name(starting_points[k], argv[j + 1]);
+                        }
+                    }
+                    else
+                    {
+                        err(1, "no arg after -name");
+                    }
+                }
+                else if (strcmp(argv[j], "-print") == 0)
+                {
+                    for (int k = 0; starting_points[k] != 0; k++)
+                    {
+                        find_head(starting_points[k]);
+                    }
+                }
+            }
         }
         free(starting_points);
     }

@@ -10,10 +10,8 @@
 
 enum my_token_type
 {
-    TOKEN_PLUS = 0,
-    TOKEN_MINUS,
-    TOKEN_MULTIPLY,
-    TOKEN_DIVIDE,
+    TOKEN_AND = 0,
+    TOKEN_OR,
     TOKEN_LEFT_PARENTHESIS,
     TOKEN_RIGHT_PARENTHESIS,
     TOKEN_NUMBER
@@ -39,10 +37,8 @@ struct token_model
 
 static struct my_token parse_token(const char *str)
 {
-    static struct token_model exprs[] = { { "+", TOKEN_PLUS },
-                                          { "-", TOKEN_MINUS },
-                                          { "*", TOKEN_MULTIPLY },
-                                          { "/", TOKEN_DIVIDE },
+    static struct token_model exprs[] = { { "-a", TOKEN_AND },
+                                          { "-o", TOKEN_OR },
                                           { "(", TOKEN_LEFT_PARENTHESIS },
                                           { ")", TOKEN_RIGHT_PARENTHESIS } };
 
@@ -64,7 +60,7 @@ static struct my_token parse_token(const char *str)
 
 static const char *token_str(struct my_token *token)
 {
-    static const char *token_strs[] = { "+", "-", "*", "/", "(", ")" };
+    static const char *token_strs[] = { "-a", "-o", "(", ")" };
     static char number_str[11];
 
     if (token->type != TOKEN_NUMBER)
@@ -117,10 +113,10 @@ static struct my_expr *parse_operand(struct my_token *tokens, unsigned *index,
     struct my_token *token = tokens + (*index)++;
 
     // Handle negation (e.g. "- 4")
-    if (token->type == TOKEN_MINUS)
+    if (token->type == TOKEN_OR)
     {
         if (length == 1)
-            errx(1, "Expected expression after token: -");
+            errx(1, "Expected expression after token: -o");
 
         struct my_expr expr;
         expr.type = EXPR_NEGATION;
@@ -136,10 +132,6 @@ static struct my_expr *parse_operand(struct my_token *tokens, unsigned *index,
     {
         unsigned right = find_parenthesis(tokens, *index, length);
         struct my_expr *expr = parse_operations(tokens, index, right);
-        *index = right + 1;
-        return expr;
-    }
-
     errx(1, "Expected tokens: -, '(' or number, but got: %s", token_str(token));
 }
 
@@ -171,7 +163,7 @@ static struct my_expr *build_op_sum(struct my_expr **expr_stack,
      * In that case, 0 - 1 == ~0, which is not < op_stack_length.
      */
     for (unsigned i = op_stack_length - 1; i < op_stack_length; --i)
-        if (op_stack[i] == EXPR_ADDITION || op_stack[i] == EXPR_SUBTRACTION)
+        if (op_stack[i] == EXPR_AND || op_stack[i] == EXPR_OR)
         {
             struct my_expr expr;
             expr.type = op_stack[i];
@@ -238,6 +230,10 @@ struct my_expr *parse_expr(char **strs, unsigned length)
         tokens[i] = parse_token(strs[i]);
 
     unsigned index = 0;
+    struct my_expr *expr = parse_operations(tokens, &index, length);
+
+    free(tokens);
+
     struct my_expr *expr = parse_operations(tokens, &index, length);
 
     free(tokens);
