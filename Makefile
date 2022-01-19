@@ -1,8 +1,8 @@
 CC= gcc
 CFLAGS= -Wall -Wextra -std=c99 -pedantic -ggdb
 
-all: src/my_find.o
-	$(CC) $^
+my_find: src/my_find.o
+	$(CC) $^ -o myfind
 
 check:
 
